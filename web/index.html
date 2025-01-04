@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlister Song Adder</title>
+    <link rel="icon" type="image/x-icon" href="/assets/500_500.png">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Exo";
+        }
+
+        @font-face {
+            font-family: 'Exo';
+            src: url("https://minnwx.com/assets/exo.ttf");
+        }
+
+        body {
+            font-family: Exo, sans-serif;
+            background-color: #1e1e1e;
+            color: #f4f4f4;
+            padding: 20px;
+        }
+
+        #app {
+            background: #2c2c2c;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #songContainer {
+            margin: 20px 0;
+        }
+
+        .song-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: #3a3a3a;
+            border-radius: 5px;
+        }
+
+        .inactive {
+            text-decoration: line-through;
+            color: gray;
+        }
+
+        input,
+        button {
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            width: calc(100% - 22px);
+            background: #3a3a3a;
+            color: #f4f4f4;
+        }
+
+        button {
+            background: #61dafb;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #4bc0eb;
+        }
+
+        .modal-content {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border: 1px solid #444;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            border-radius: 5px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .songItem {
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: #3a3a3a;
+            border-radius: 5px;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .songItem:hover {
+            background: #4a4a4a;
+            transform: scale(1.02);
+        }
+
+        .songItem span {
+            flex: 1;
+        }
+
+        .songItem span:first-child {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .inactive {
+            text-decoration: line-through;
+            color: gray;
+        }
+
+        .songItem .status-icon {
+            font-size: 1.5em;
+            margin-left: 10px;
+        }
+
+        h1 img {
+            height: 40px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        img {
+            border-radius: 8px;
+
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <h1>
+            <img src="playlister_logo.png" alt="Logo" style="height: 40px; vertical-align: middle; margin-right: 10px;">
+            Modify all playlists:
+        </h1>
+        <div id="songContainers">
+        </div>
+        <h3>Add New Song</h3>
+        Song File: <input type="file" id="song" required>
+        Playlist ID (exact case-non-sensitive): <input type="text" id="playlistId" placeholder="dalk8_tracks" required>
+        Song Name: <input type="text" id="songName" placeholder="End Of Line" required>
+        Song Artist: <input type="text" id="songArtist" placeholder="Daft Punk" required>
+        <button id="addSongButton">Add Song</button>
+    </div>
+    <div id="modal" class="hidden">
+        <div class="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Song JSON Data</h2>
+            <pre id="songData"></pre>
+            <button id="deleteSongButton">Remove Song</button>
+        </div>
+    </div>
+    <script>
+        const songContainer = document.getElementById('songContainers');
+        const modal = document.getElementById('modal');
+        const songDetails = document.getElementById('songData');
+        let playlists = {};
+        let selectedSong = null;
+
+        async function fetchSongs() {
+            try {
+                const response = await fetch('/api/playlists');
+                if (!response.ok) throw new Error('Network response was not ok');
+                playlists = await response.json();
+                displaySongs();
+            } catch (error) {
+                console.error('Error fetching songs:', error);
+            }
+        }
+
+        function displaySongs() {
+            songContainer.innerHTML = '';
+
+            Object.keys(playlists).forEach(playlistKey => {
+                const playlist = playlists[playlistKey];
+
+                const playlistHeader = document.createElement('h3');
+                playlistHeader.innerText = "Playlist ID: " + playlistKey;
+                songContainer.appendChild(playlistHeader);
+
+                playlist.forEach(song => {
+                    const songItem = document.createElement('div');
+                    songItem.className = 'songItem';
+
+                    songItem.innerHTML = `
+                                 <span class="status-icon">
+                         <img src="${song.metadata.iconUrl}" width="60px">
+                     </span>
+                <span>${song.metadata.songName} - ${song.metadata.artist}</span>
+                <span>${song.metadata.album}</span>
+                <span>${song.metadata.year}</span>
+            `;
+
+                    songItem.onclick = () => showSongDetails(song);
+
+                    songContainer.appendChild(songItem);
+                });
+            });
+        }
+
+        function showSongDetails(song) {
+            selectedSong = song;
+            songDetails.innerText = JSON.stringify(song, null, 2);
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            selectedSong = null;
+        }
+
+        document.getElementById('addSongButton').onclick = async () => {
+            const newSong = {
+                id: document.getElementById('playlistId').value,
+                name: document.getElementById('songName').value,
+                artist: document.getElementById('songArtist').value
+            };
+            try {
+                const fileInput = document.getElementById('song');
+                const file = fileInput.files[0];
+                const response = await fetch(`/api/playlist/${newSong.id}/add?songName=${newSong.name}&artist=${newSong.artist}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'audio/mpeg'
+                    },
+                    body: file
+                });
+                if (!response.ok) throw new Error('Network response was not ok');
+                await fetchSongs();
+            } catch (error) {
+                console.error('Error adding song:', error);
+            }
+        };
+
+        document.getElementById('deleteSongButton').onclick = async () => {
+            if (!selectedSong) return;
+            try {
+                const response = await fetch(`/api/playlist/${selectedSong.playlistId}/remove?songName=${selectedSong.fileName}`, {
+                    method: 'GET',
+                });
+                if (!response.ok) throw new Error('Network response was not ok');
+                await fetchSongs();
+                closeModal();
+            } catch (error) {
+                console.error('Error disabling song:', error);
+            }
+        };
+
+        fetchSongs();
+    </script>
+</body>
+
+</html>
