@@ -122,6 +122,7 @@
     </div>
 
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
         const playlist = urlParams.get('playlist')
 
         async function fetchPlaylist() {
@@ -170,7 +171,6 @@
             setupVisualizer(audioElement);
         }
 
-        const urlParams = new URLSearchParams(window.location.search);
         const showVisualizer = urlParams.get('visualizer') === 'true';
         const colorSetting = urlParams.get('color') || 'red';
 
