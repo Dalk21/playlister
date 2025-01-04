@@ -122,11 +122,13 @@
     </div>
 
     <script>
+        const playlist = urlParams.get('playlist')
+
         async function fetchPlaylist() {
             try {
                 const response = await fetch('http://localhost:40005/api/playlists');
                 const data = await response.json();
-                return data.test;
+                return data[playlist];
             } catch (error) {
                 console.error('Error fetching playlist:', error);
             }
