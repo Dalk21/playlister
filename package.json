@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "express": "^4.21.2",
+    "node-fetch": "^2.7.0"
+  },
+  "name": "playlister",
+  "version": "1.0.0",
+  "description": "Automatically handle playlists, and provide a sleek overlay for livestreams.",
+  "main": "app.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dalk21/playlister.git"
+  },
+  "author": "Dalk",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dalk21/playlister/issues"
+  },
+  "homepage": "https://github.com/Dalk21/playlister#readme"
+}
